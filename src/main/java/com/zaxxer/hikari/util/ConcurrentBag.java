@@ -120,10 +120,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException {
         // Try the thread-local list first
         final List<Object> list = threadList.get();
+        // 从后面往前找
         for (int i = list.size() - 1; i >= 0; i--) {
             final Object entry = list.remove(i);
             @SuppressWarnings("unchecked") final T bagEntry = weakThreadLocals ? ((WeakReference<T>) entry).get() : (T) entry;
+            // 当前状态 STATE_NOT_IN_USE => STATE_IN_USE 使用CAS
             if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                // 转换成功
                 return bagEntry;
             }
         }
@@ -198,9 +201,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
             LOGGER.info("ConcurrentBag has been closed, ignoring add()");
             throw new IllegalStateException("ConcurrentBag has been closed, ignoring add()");
         }
-
+        // 新添加的资源优先放入CopyOnWriteArrayList
         sharedList.add(bagEntry);
 
+        // 当有等待资源的线程时，将资源交到某个等待线程后才返回（SynchronousQueue）
         // spin until a thread takes it or none are waiting
         while (waiters.get() > 0 && bagEntry.getState() == STATE_NOT_IN_USE && !handoffQueue.offer(bagEntry)) {
             yield();
