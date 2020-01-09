@@ -50,10 +50,25 @@ public class HikariConfig implements HikariConfigMXBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
     private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    /**
+     * default 30 秒
+     */
     private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
+    /**
+     * valid 时间
+     */
     private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
+    /**
+     * IDLE
+     */
     private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
+    /**
+     * max
+     */
     private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+    /**
+     * default pool size
+     */
     private static final int DEFAULT_POOL_SIZE = 10;
 
     private static boolean unitTest = false;
@@ -1042,6 +1057,11 @@ public class HikariConfig implements HikariConfigMXBean {
         }
     }
 
+    /**
+     * 生成连接池
+     *
+     * @return
+     */
     private String generatePoolName() {
         final String prefix = "HikariPool-";
         try {
